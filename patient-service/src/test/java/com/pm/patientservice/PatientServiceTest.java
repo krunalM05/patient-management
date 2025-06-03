@@ -2,6 +2,7 @@ package com.pm.patientservice;
 
 import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
+import com.pm.patientservice.exception.EmailAlreadyExistException;
 import com.pm.patientservice.exception.PatientNotFoundException;
 import com.pm.patientservice.mapper.PatientMapper;
 import com.pm.patientservice.model.Patient;
@@ -116,7 +117,7 @@ public class PatientServiceTest {
 
             //assert
             assertNotNull(result);
-            assertEquals(id, result.getId());
+            assertEquals(id.toString(), result.getId());
             assertEquals("John", result.getFirstName());
             assertEquals("Doe", result.getLastName());
             verify(patientRepository, times(1)).findById(id);
@@ -184,6 +185,45 @@ public class PatientServiceTest {
             assertEquals(patientResponseDTO.getEmail(), result.getEmail());
             verify(patientRepository, times(1)).save(any(Patient.class));
         }
+
+        @Test
+        @DisplayName("Add Patient with Existing Email")
+        void addPatientTest_WithExistingEmail(){
+            when(patientRepository.existsByEmail(patientRequestDTO.getEmail())).thenReturn(true);
+            assertThrows(EmailAlreadyExistException.class,()->patientService.addPatient(patientRequestDTO));
+            verify(patientRepository, never()).save(any(Patient.class));
+            verify(patientRepository, times(1)).existsByEmail(patientRequestDTO.getEmail());
+        }
     }
+
+    @Nested
+    @DisplayName("Delete Patient Tests")
+    class DeletePatientTests {
+
+        @Test
+        @DisplayName("Delete Patient By Correct ID Test")
+        void deletePatientByIdTest() {
+            UUID patientId = UUID.randomUUID();
+            when(patientRepository.existsById(patientId)).thenReturn(true);
+
+            patientService.deletePatient(patientId);
+
+            verify(patientRepository, times(1)).deleteById(patientId);
+        }
+
+        @Test
+        @DisplayName("Delete Patient By Incorrect (Non-existent) ID Test")
+        void deletePatientByInvalidIdTest() {
+            UUID invalidId = UUID.randomUUID();
+            when(patientRepository.existById(invalidId)).thenReturn(false);
+
+            assertThrows(PatientNotFoundException.class, () -> patientService.deletePatient(invalidId));
+
+            verify(patientRepository, never()).deleteById(invalidId);
+        }
+
+    }
+
+
 
 }

@@ -1,12 +1,15 @@
 package com.pm.patientservice.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
@@ -35,12 +38,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    public ResponseEntity<Map<String, String>> handlePatientNotFoundException(
+    @ExceptionHandler(PatientNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePatientNotFoundException(
             PatientNotFoundException ex
     ){
         log.warn("Patient not found {}", ex.getMessage());
-        Map<String, String> errors = new HashMap<>();
-        errors.put("message", "Patient not found");
-        return ResponseEntity.badRequest().body(errors);
+        Map<String, Object> errorBody = new LinkedHashMap<>();
+        errorBody.put("timestamp", Instant.now());
+        errorBody.put("status", HttpStatus.NOT_FOUND.value());
+        errorBody.put("error", "Not Found");
+        errorBody.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody);
     }
+
 }

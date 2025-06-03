@@ -6,7 +6,6 @@ import com.pm.patientservice.dto.validators.CreatePatientValidatorGroup;
 import com.pm.patientservice.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,9 +57,8 @@ public class PatientController {
 
     @GetMapping("/{patientId}")
     @Operation(summary = "Get patient by Id")
-    public ResponseEntity<PatientResponseDTO> getPatientById(@PathVariable UUID patientId){{
+    public ResponseEntity<PatientResponseDTO> getPatientById(@PathVariable UUID patientId){
         return ResponseEntity.ok().body(patientService.getPatientById(patientId));
-    }
     }
 
     @GetMapping("/email/{email}")
@@ -85,6 +83,7 @@ public class PatientController {
     @DeleteMapping("/{patientId}")
     @Operation(summary = "Delete patient")
     public ResponseEntity<Object> deletePatient(@PathVariable UUID patientId){
+        patientService.deletePatient(patientId);
         return ResponseEntity.noContent().build();
     }
 }
